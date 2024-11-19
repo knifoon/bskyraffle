@@ -32,26 +32,26 @@ const getInfo = async() => {
   winner.value = null
   participants.value = [];
 
-  info.value.embed = await fetch(`http://192.168.50.202:49153/https://embed.bsky.app/oembed?url=${postURL}`)
+  info.value.embed = await fetch(`https://corsproxy.io/?https://embed.bsky.app/oembed?url=${postURL}`)
   .then(res => res.json())
   .then(data => data.html)
   
-  display.value = true;
   if(!postURL.startsWith('https://bsky.app')) {
     warning.value = 'Not a Bluesky URL'
     return;
   }
   let post = [...postURL.matchAll(/profile\/(.*)\/post\/(.*)/g)];
   [info.value.full,info.value.handle,info.value.post] = post[0];
-    //get did
-    info.value.did = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${info.value.handle}`)
-      .then(res => res.json())
-      .then(data => {
-        info.value.handle = data.handle
-        info.value.displayName = data.displayName
-        return data.did
-      })
-
+  //get did
+  info.value.did = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${info.value.handle}`)
+  .then(res => res.json())
+  .then(data => {
+    info.value.handle = data.handle
+    info.value.displayName = data.displayName
+    return data.did
+  })
+  
+  display.value = true;
   const at_uri = `at://${await info.value.did}/app.bsky.feed.post/${info.value.post}`
   //get comments
   fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=${at_uri}&depth=1`)
@@ -128,11 +128,23 @@ if(postURL !== '') getInfo();
 
 <template>
   <header>
+    <div class="cred">
+      <span>by <a href="https://bsky.app/knifoon.com">knifoon</a></span>
+    </div>
     <input v-model="postURL" placeholder="post url" @change="getInfo" class="post-url">
     <div>
       <button @click="getRandom(participants)">Pick Winner</button>
     </div>
-    <h1 v-if="winner" class="winner">Winner is <a :href="`${winner.url}`" target="_blank">{{ winner.handle }}</a></h1>
+    <div v-if="winner" class="winner">
+      <img :src="`${winner.avatar}`" alt="">
+      <a :href="`${winner.url}`" target="_blank">
+        <h1>
+          {{ winner.displayName || winner.handle }} 
+          <br>
+          WINS
+        </h1>
+      </a>
+    </div>
     <div v-if="warning "><h4>{{ warning }}</h4></div>
   </header>
   <div class="container">
@@ -155,12 +167,26 @@ if(postURL !== '') getInfo();
 header {
   text-align: center;
 }
+.winner {
+  margin-top: 5px;
+}
+.winner img {
+  border-radius: 50%;
+  height: 100px;
+}
+.winner h1 {
+  background: #fff;
+  border-radius: 5px;
+  padding: 10px;
+  margin: -20px 0 10px 0;
+}
 .col {
   display: inline-block;
   text-align: left;
 }
 .embed {
   width: 600px;
+  align-self: center;
 }
 .avatar {
   height: 30px;
@@ -171,6 +197,7 @@ header {
   padding: 10px;
   border-radius: 5px;
   border: solid 1px;
+  margin-bottom: 10px;
 }
 .container {
   display: flex;
