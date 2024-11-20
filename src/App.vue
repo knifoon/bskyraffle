@@ -2,6 +2,7 @@
 import {ref} from 'vue'
 
 let params = new URLSearchParams(window.location.search)
+const domain = window.location.hostname + '/bskyraffle/';
 let postURL = params.get('post') || "";
 let display = ref(false);
 let warning = ref('');
@@ -9,6 +10,9 @@ let info = ref({});
 let participants = ref([]);
 let winner = ref(null)
 
+const copy = (t) => {
+  navigator.clipboard.writeText(t)
+}
 
 const fetchAll = async (url,tar,cursor=null,arr=[]) => {
         let addCursor = ''
@@ -129,6 +133,7 @@ if(postURL !== '') getInfo();
 <template>
   <header>
     <div class="cred">
+      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`${domain}?post=${postURL}`)"></a></span>
       <span>by <a href="https://bsky.app/knifoon.com">knifoon</a></span>
     </div>
     <input v-model="postURL" placeholder="post url" @change="getInfo" class="post-url">
@@ -167,6 +172,21 @@ if(postURL !== '') getInfo();
 header {
   text-align: center;
 }
+.cred {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.share {
+  margin-right: 10px;
+}
+.share img{
+  height: 20px;
+  opacity: 80%;
+}
+.share img:hover{
+  opacity: 100%;
+}
 .winner {
   margin-top: 5px;
 }
@@ -176,7 +196,7 @@ header {
 }
 .winner h1 {
   background: #fff;
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 10px;
   margin: -20px 0 10px 0;
 }
@@ -195,7 +215,7 @@ header {
 .post-url {
   align-content: center;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 10px;
   border: solid 1px;
   margin-bottom: 10px;
 }
@@ -218,7 +238,7 @@ header {
   text-align: center;
   color: #1C4059;
   background: #ddd;
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 0 5px;
 }
 .partic_container h2 {
