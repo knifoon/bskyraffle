@@ -62,23 +62,21 @@ const getInfo = async() => {
     .then(res => res.json())
     .then(data => {;
       info.value.replies = data.thread.replies
-      console.log('comments=',info.value.replies)
     })
   //get likes
   info.value.likes = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=${at_uri}&limit=100`,'likes')
-  console.log('likes=',info.value.likes);
   //get reposts
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
-  console.log('reposts=',info.value.reposts)
-  console.log('done getting info')
   let bskyEmbed = document.createElement('script')
       bskyEmbed.setAttribute('src', 'https://embed.bsky.app/static/embed.js')
       document.querySelector('.bluesky-embed').insertAdjacentElement('afterend',bskyEmbed)
   getPlayers();
+  setTimeout(() => {
+    getListHeight();
+  }, 1000);
 }
 
 const getPlayers = async() => {
-  console.log('getplayers');
   
   let commentUserList = await info.value.replies.map(comment => {
     return {
@@ -101,9 +99,6 @@ const getPlayers = async() => {
     did: repost.did,
     }
   })
-  console.log('comment users = ',commentUserList)
-  // console.log('likes users = ',likeUserList)
-  // console.log('reposts users = ',repostUserList)
 
   //need to generate link from comment
   const checkFollow = async (url) => {
@@ -111,7 +106,6 @@ const getPlayers = async() => {
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        console.log('relationship = ', data.relationships[0].followedBy)
         if(data.relationships[0].followedBy) follow = true
       })
       return follow
@@ -119,22 +113,28 @@ const getPlayers = async() => {
   participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
-  console.log(participants)
+
 }
 
 const getRandom = (arr) => {
-  console.log('picking winner')
   winner.value = arr[Math.floor(Math.random() * arr.length)]
 }
 
 if(postURL !== '') getInfo();
+
+const getListHeight = () => {
+  document.querySelector('.partic_container ul').style.cssText  = `max-height: 500px`;
+  let listHeight = document.querySelector('.container').clientHeight
+  document.querySelector('.partic_container ul').style.cssText  = `max-height: ${listHeight * 0.92}px`;
+  console.log(listHeight)
+}
 </script>
 
 <template>
   <header>
     <div class="cred">
       <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`${domain}?post=${postURL}`)"></a></span>
-      <span>by <a href="https://bsky.app/knifoon.com">knifoon</a></span>
+      <span>by <a href="https://bsky.app/profile/knifoon.com">knifoon</a></span>
     </div>
     <input v-model="postURL" placeholder="post url" @change="getInfo" class="post-url">
     <div>
@@ -247,7 +247,6 @@ header {
 .partic_container ul {
   margin: 0;
   text-align: left;
-  max-height: 500px;
   overflow-y: scroll;
   padding: 5px;
 }
