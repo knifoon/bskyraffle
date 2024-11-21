@@ -118,7 +118,8 @@ const getPlayers = async() => {
   participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
-  participants.value = participants.value.reduce()
+  //exclude post author
+  participants.value = participants.value.filter(user => user.did != info.value.did)
 }
 
 const getRandom = (arr) => {
