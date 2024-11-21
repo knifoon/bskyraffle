@@ -128,6 +128,7 @@ const getPlayers = async() => {
     return {
     handle: like.actor.handle,
     did: like.actor.did,
+    displayName: like.actor.displayName,
     url: `https://bsky.app/profile/${like.actor.handle}`,
     avatar: like.actor.avatar
     }
