@@ -76,9 +76,15 @@ const getInfo = async() => {
       bskyEmbed.setAttribute('src', 'https://embed.bsky.app/static/embed.js')
       document.querySelector('.bluesky-embed').insertAdjacentElement('afterend',bskyEmbed)
   getPlayers();
-  setTimeout(() => {
-    getListHeight();
-  }, 1000);
+  const observer = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      const { height } = entry.contentRect;
+      console.log('Height changed:', height); 
+      // Do something with the new height
+      document.querySelector('.partic_container ul').style.cssText  = `max-height: ${height * 0.92}px`;
+    }
+  });
+  observer.observe(document.querySelector('.container'));
 }
 
 const getPlayers = async() => {
@@ -127,13 +133,6 @@ const getRandom = (arr) => {
 }
 
 if(postURL !== '') getInfo();
-
-const getListHeight = () => {
-  document.querySelector('.partic_container ul').style.cssText  = `max-height: 500px`;
-  let listHeight = document.querySelector('.container').clientHeight
-  document.querySelector('.partic_container ul').style.cssText  = `max-height: ${listHeight * 0.92}px`;
-  console.log(listHeight)
-}
 </script>
 
 <template>
@@ -251,6 +250,7 @@ header {
   margin-block-end: 0;
 }
 .partic_container ul {
+  max-height: 500px;
   margin: 0;
   text-align: left;
   overflow-y: scroll;
