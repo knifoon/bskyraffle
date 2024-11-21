@@ -10,6 +10,23 @@ let info = ref({});
 let participants = ref([]);
 let winner = ref(null)
 let raffleOptions = ref({})
+let optURL = ref('1111')
+if (params.get('opt')){
+  //4 digits
+  console.log('raffle options');  
+  raffleOptions.value.like = true
+  raffleOptions.value.comment = params.get('opt')[1] == 1
+  raffleOptions.value.repost = params.get('opt')[2] == 1
+  raffleOptions.value.follow = params.get('opt')[3] == 1
+  console.log(raffleOptions.value);
+  
+  
+} else {
+  raffleOptions.value.like = true
+  raffleOptions.value.comment = true
+  raffleOptions.value.repost = true
+  raffleOptions.value.follow = true
+}
 
 const copy = (t) => {
   navigator.clipboard.writeText(t)
@@ -72,6 +89,15 @@ const getInfo = async() => {
   info.value.likes = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=${at_uri}&limit=100`,'likes')
   //get reposts
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
+  //make opturl
+  let newOpt = '1'
+  raffleOptions.value.comment ? newOpt += '1' : newOpt += '0'
+  raffleOptions.value.repost ? newOpt += '1' : newOpt += '0'
+  raffleOptions.value.follow ? newOpt += '1' : newOpt += '0'
+  console.log('opturl =', optURL)
+  console.log('newurl =', newOpt)
+  optURL.value = newOpt
+  
   let bskyEmbed = document.createElement('script')
       bskyEmbed.setAttribute('src', 'https://embed.bsky.app/static/embed.js')
       document.querySelector('.bluesky-embed').insertAdjacentElement('afterend',bskyEmbed)
@@ -80,15 +106,15 @@ const getInfo = async() => {
     for (let entry of entries) {
       const { height } = entry.contentRect;
       console.log('Height changed:', height); 
-      // Do something with the new height
       document.querySelector('.partic_container ul').style.cssText  = `max-height: ${height * 0.92}px`;
     }
   });
   observer.observe(document.querySelector('.container'));
+
 }
 
 const getPlayers = async() => {
-  
+  // filter users
   let commentUserList = await info.value.replies.map(comment => {
     return {
       handle: comment.post.author.handle,
@@ -102,6 +128,8 @@ const getPlayers = async() => {
     return {
     handle: like.actor.handle,
     did: like.actor.did,
+    url: `https://bsky.app/profile/${like.actor.handle}`,
+    avatar: like.actor.avatar
     }
   })
   let repostUserList = await info.value.reposts.map(repost => {
@@ -121,9 +149,13 @@ const getPlayers = async() => {
       })
       return follow
   }
-  participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
-  participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
-  participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
+  if(raffleOptions.value.comment){
+    participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
+  } else {
+    participants.value = likeUserList
+  }
+  if(raffleOptions.value.repost) participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
+  if(raffleOptions.value.follow) participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
   //exclude post author
   participants.value = participants.value.filter(user => user.did != info.value.did)
 }
@@ -138,10 +170,18 @@ if(postURL !== '') getInfo();
 <template>
   <header>
     <div class="cred">
-      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`${domain}?post=${postURL}`)"></a></span>
+      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`${domain}?opt=${optURL}&post=${postURL}`)"></a></span>
       <span>by <a href="https://bsky.app/profile/knifoon.com">knifoon</a></span>
     </div>
-    <input v-model="postURL" placeholder="post url" @change="getInfo" class="post-url">
+    <div>
+      <input v-model="postURL" placeholder="post url" @keyup.enter="getInfo" class="post-url">
+      <br>
+      Req. = 
+      Repost:<input v-model="raffleOptions.repost" type="checkbox">
+      Comment:<input v-model="raffleOptions.comment" type="checkbox">
+      Follow:<input v-model="raffleOptions.follow" type="checkbox">
+
+    </div>
     <div v-if="display">
       <button @click="getRandom(participants)">Pick Winner</button>
     </div>
