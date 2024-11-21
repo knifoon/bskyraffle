@@ -1,5 +1,5 @@
-# Vue 3 + Vite
+# BlueSky Engagement Raffle Tool
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+Lets you do a raffle on a post.
+Uses Likes to choose participants of the raffle, also lets you decide if reposts,comments, and follows are required
+If comments are required, itll link to the comment when clicking participant names, otherwise participant names will link to profiles
