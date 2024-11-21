@@ -16,6 +16,9 @@ iframe {
   color-scheme: normal;
   border: 0;
 }
+.bluesky-embed {
+  display: none;
+}
 a {
   font-weight: 500;
   color: #646cff;

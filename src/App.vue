@@ -9,6 +9,7 @@ let warning = ref('');
 let info = ref({});
 let participants = ref([]);
 let winner = ref(null)
+let raffleOptions = ref({})
 
 const copy = (t) => {
   navigator.clipboard.writeText(t)
@@ -61,8 +62,9 @@ const getInfo = async() => {
   fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=${at_uri}&depth=1`)
     .then(res => res.json())
     .then(data => {;
-      info.value.replies = data.thread.replies
+      info.value.replies = data.thread.replies.sort( (a,b) => new Date(a.post.indexedAt).getTime() - new Date(b.post.indexedAt).getTime())
     })
+    
   //get likes
   info.value.likes = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=${at_uri}&limit=100`,'likes')
   //get reposts
@@ -113,7 +115,7 @@ const getPlayers = async() => {
   participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
   participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
-
+  participants.value = participants.value.reduce()
 }
 
 const getRandom = (arr) => {
@@ -137,7 +139,7 @@ const getListHeight = () => {
       <span>by <a href="https://bsky.app/profile/knifoon.com">knifoon</a></span>
     </div>
     <input v-model="postURL" placeholder="post url" @change="getInfo" class="post-url">
-    <div>
+    <div v-if="display">
       <button @click="getRandom(participants)">Pick Winner</button>
     </div>
     <div v-if="winner" class="winner">
