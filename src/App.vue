@@ -63,6 +63,9 @@ const getInfo = async() => {
     .then(res => res.json())
     .then(data => {;
       info.value.replies = data.thread.replies.sort( (a,b) => new Date(a.post.indexedAt).getTime() - new Date(b.post.indexedAt).getTime())
+      info.value.replies = info.value.replies.filter((u,i,s) => i === s.findIndex(t=>(
+        t.post.author.did === u.post.author.did
+      )))
     })
     
   //get likes
