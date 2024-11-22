@@ -79,7 +79,7 @@ const getInfo = async() => {
   fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=${at_uri}&depth=1`)
     .then(res => res.json())
     .then(data => {;
-      info.value.replies = data.thread.replies.sort( (a,b) => new Date(a.post.indexedAt).getTime() - new Date(b.post.indexedAt).getTime())
+      info.value.replies = data.thread.replies.sort( (a,b) => new Date(b.post.indexedAt).getTime() - new Date(a.post.indexedAt).getTime())
       info.value.replies = info.value.replies.filter((u,i,s) => i === s.findIndex(t=>(
         t.post.author.did === u.post.author.did
       )))
@@ -187,7 +187,7 @@ if(postURL !== '') getInfo();
       <button @click="getRandom(participants)">Pick Winner</button>
     </div>
     <div v-if="winner" class="winner">
-      <img :src="`${winner.avatar}`" alt="">
+      <img :src="`${winner.avatar || '/src/assets/avatar.svg'}`" alt="">
       <a :href="`${winner.url}`" target="_blank">
         <h1>
           {{ winner.displayName || winner.handle }} 
@@ -206,7 +206,7 @@ if(postURL !== '') getInfo();
       <h2>{{ participants.length }} Participants</h2> 
       <ul>
         <li v-for="participant in participants" class="participant">
-          <img :src="`${participant.avatar}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a>
+          <img :src="`${participant.avatar || '/src/assets/avatar.svg'}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a>
         </li>
       </ul>
     </div>
