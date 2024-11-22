@@ -178,9 +178,9 @@ if(postURL !== '') getInfo();
       <input v-model="postURL" placeholder="post url" @keyup.enter="getInfo" class="post-url">
       <br>
       Req. = 
-      Repost:<input v-model="raffleOptions.repost" type="checkbox">
-      Comment:<input v-model="raffleOptions.comment" type="checkbox">
-      Follow:<input v-model="raffleOptions.follow" type="checkbox">
+      Repost:<input v-model="raffleOptions.repost" type="checkbox" @click="getInfo">
+      Comment:<input v-model="raffleOptions.comment" type="checkbox" @click="getInfo">
+      Follow:<input v-model="raffleOptions.follow" type="checkbox" @click="getInfo">
 
     </div>
     <div v-if="display">
