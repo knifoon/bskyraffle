@@ -173,7 +173,7 @@ if(postURL !== '') getInfo();
 <template>
   <header>
     <div class="cred">
-      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`${domain}?opt=${optURL}&post=${postURL}`)"></a></span>
+      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`https://${domain}?opt=${optURL}&post=${postURL}`)"></a></span>
       <span>by <a href="https://bsky.app/profile/knifoon.com">knifoon</a></span>
     </div>
     <div>
