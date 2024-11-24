@@ -74,3 +74,12 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
 }
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}

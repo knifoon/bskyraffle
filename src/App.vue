@@ -13,6 +13,7 @@ let participants = ref([]);
 let winner = ref(null)
 let raffleOptions = ref({})
 let optURL = ref('1111')
+let copied = ref(false)
 if (params.get('opt')){
   //4 digits
   console.log('raffle options');  
@@ -32,6 +33,10 @@ if (params.get('opt')){
 
 const copy = (t) => {
   navigator.clipboard.writeText(t)
+  copied.value = true
+  setTimeout(() => {
+    copied.value = false
+  }, 500);
 }
 
 const fetchAll = async (url,tar,cursor=null,arr=[]) => {
@@ -173,7 +178,10 @@ if(postURL !== '') getInfo();
 <template>
   <header>
     <div class="cred">
-      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`https://${domain}?opt=${optURL}&post=${postURL}`)"></a></span>
+      <Transition>
+        <span v-if="copied" class="share-notification">copied link</span>
+      </Transition>
+      <span class="share"><a href="#"><img src="@/assets/share.svg" alt="share current post" @click="copy(`http://${domain}?opt=${optURL}&post=${postURL}`)"></a></span>
       <span>by <a href="https://bsky.app/profile/knifoon.com">knifoon</a></span>
     </div>
     <div>
@@ -234,6 +242,9 @@ header {
 }
 .share img:hover{
   opacity: 100%;
+}
+.share-notification {
+  margin-right: 10px;
 }
 .winner {
   margin-top: 5px;
