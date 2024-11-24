@@ -50,10 +50,14 @@ button {
   font-family: inherit;
   background-color: #208BFE;
   cursor: pointer;
+  transition: background-color 0.25s;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #4DA2FE;
+  background-color: #4DA2FE;
+}
+button:active {
+  border-color: #fff
 }
 button:focus,
 button:focus-visible {

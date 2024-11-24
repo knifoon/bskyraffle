@@ -2,7 +2,9 @@
 import {ref} from 'vue'
 
 let params = new URLSearchParams(window.location.search)
-const domain = window.location.hostname + '/bskyraffle/';
+const domain = window.location.hostname;
+import avatarFallback from '@/assets/avatar.svg';
+
 let postURL = params.get('post') || "";
 let display = ref(false);
 let warning = ref('');
@@ -184,10 +186,10 @@ if(postURL !== '') getInfo();
 
     </div>
     <div v-if="display">
-      <button @click="getRandom(participants)">Pick Winner</button>
+      <button @click="getRandom(participants)">Pick A Winner</button>
     </div>
     <div v-if="winner" class="winner">
-      <img :src="`${winner.avatar || '/src/assets/avatar.svg'}`" alt="">
+      <img :src="`${winner.avatar || avatarFallback}`" alt="">
       <a :href="`${winner.url}`" target="_blank">
         <h1>
           {{ winner.displayName || winner.handle }} 
@@ -206,7 +208,7 @@ if(postURL !== '') getInfo();
       <h2>{{ participants.length }} Participants</h2> 
       <ul>
         <li v-for="participant in participants" class="participant">
-          <img :src="`${participant.avatar || '/src/assets/avatar.svg'}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a>
+          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a>
         </li>
       </ul>
     </div>
