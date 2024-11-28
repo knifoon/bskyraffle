@@ -1,6 +1,7 @@
 <script setup>
 import {ref} from 'vue'
-import { MessageSquare,Ticket,TicketPlus,UserCheck,Repeat } from 'lucide-vue-next';
+import { MessageSquare,Ticket,TicketPlus,UserCheck,Repeat } from 'lucide-vue-next'
+import VueLazyLoad from 'vue-lazyload'
 
 let params = new URLSearchParams(window.location.search)
 const domain = window.location.hostname;
@@ -267,8 +268,8 @@ if(postURL !== '') getInfo();
     <div v-if="participants.length > 1" class="col partic_container">
       <h2 style="position: relative;">{{ participants.length }} Participants <span style="font-size: 20px;position: absolute; right: 10px; top: -15px;"><Ticket style="vertical-align: text-bottom; height: 22px;"><title>Total Tickets</title></Ticket> {{ assignTickets().length }}</span></h2>
       <ul>
-        <li v-for="participant in participants" class="participant">
-          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a> <TicketPlus v-for="n in participant.bonus" style="vertical-align: text-top;"><title>Bonus Ticket</title></TicketPlus>
+        <li v-for="participant in participants" class="participant" v-lazy-container="{ selector: 'img', loading: '@/assets/avatar.svg' }">
+          <img :src="`${participant.avatar || avatarFallback}`" class="avatar" loading="lazy"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a> <TicketPlus v-for="n in participant.bonus" style="vertical-align: text-top;"><title>Bonus Ticket</title></TicketPlus>
         </li>
       </ul>
     </div>
