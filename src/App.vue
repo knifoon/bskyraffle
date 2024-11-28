@@ -1,5 +1,6 @@
 <script setup>
 import {ref} from 'vue'
+import { MessageSquare,Ticket,TicketPlus,UserCheck,Repeat } from 'lucide-vue-next';
 
 let params = new URLSearchParams(window.location.search)
 const domain = window.location.hostname;
@@ -113,10 +114,10 @@ const getInfo = async() => {
     for (let entry of entries) {
       const { height } = entry.contentRect;
       // console.log('Height changed:', height); 
-      document.querySelector('.partic_container ul').style.cssText  = `max-height: ${height * 0.92}px`;
+      document.querySelector('.partic_container ul').style.cssText  = `max-height: ${height * 0.9}px;margin-bottom:30px`;
     }
   });
-  observer.observe(document.querySelector('.container'));
+  observer.observe(document.querySelector('.embed'));
 
 }
 
@@ -197,9 +198,20 @@ const getPlayers = async() => {
     })
   }
 }
-
-const getRandom = (arr) => {
-  winner.value = arr[Math.floor(Math.random() * arr.length)]
+const assignTickets = () => {
+  let tickets = [];
+  participants.value.forEach(user => {
+    for(let i = user.bonus + 1; i > 0; i--){
+      tickets.push(user.did)
+    }
+  })
+  console.log(tickets)
+  return tickets
+}
+const getRandom = () => {
+  let tickets = assignTickets()
+  let winningTicket = tickets[Math.floor(Math.random() * tickets.length)]
+  winner.value = participants.value.find(e => e.did == winningTicket)
 }
 
 const toggleOpt = (opt) => {
@@ -209,9 +221,9 @@ getInfo();
 }
 
 const optName = (n) => {
-  return n==1 ? 'REQ'
-  : n==2 ? 'BONUS'
-  : ''
+  return n==1 ? 'Required'
+  : n==2 ? 'Bonus Ticket'
+  : 'Optional'
 }
 if(postURL !== '') getInfo();
 </script>
@@ -228,9 +240,9 @@ if(postURL !== '') getInfo();
     <div>
       <input v-model="postURL" placeholder="post url" @keyup.enter="getInfo" class="post-url">
       <br>
-      <button @click="toggleOpt('repost')">Repost {{ optName(raffleOptions.repost) }}</button>
-      <button @click="toggleOpt('comment')">Comment {{ optName(raffleOptions.comment) }}</button>
-      <button @click="toggleOpt('follow')">Follow {{ optName(raffleOptions.follow) }}</button>
+      <button @click="toggleOpt('repost')" class="opt-button" :class="{'optional':raffleOptions.repost==0,'req':raffleOptions.repost==1,'bonus':raffleOptions.repost==2}" :title="'Repost: '+optName(raffleOptions.repost)"><Repeat /></button>
+      <button @click="toggleOpt('comment')" class="opt-button" :class="{'optional':raffleOptions.comment==0,'req':raffleOptions.comment==1,'bonus':raffleOptions.comment==2}" :title="'Comment: '+optName(raffleOptions.comment)"><MessageSquare /></button>
+      <button @click="toggleOpt('follow')" class="opt-button" :class="{'optional':raffleOptions.follow==0,'req':raffleOptions.follow==1,'bonus':raffleOptions.follow==2}" :title="'Follow: '+optName(raffleOptions.follow)"><UserCheck /></button>
 
     </div>
     <div v-if="display">
@@ -253,10 +265,10 @@ if(postURL !== '') getInfo();
       <div v-html="info.embed"></div>
     </div>
     <div v-if="participants.length > 1" class="col partic_container">
-      <h2>{{ participants.length }} Participants</h2> 
+      <h2 style="position: relative;">{{ participants.length }} Participants <span style="font-size: 20px;position: absolute; right: 10px; top: -15px;"><Ticket style="vertical-align: text-bottom; height: 22px;"><title>Total Tickets</title></Ticket> {{ assignTickets().length }}</span></h2>
       <ul>
         <li v-for="participant in participants" class="participant">
-          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }} bonus: {{ participant.bonus }}</a>
+          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a> <TicketPlus v-for="n in participant.bonus" style="vertical-align: text-top;"><title>Bonus Ticket</title></TicketPlus>
         </li>
       </ul>
     </div>
@@ -349,5 +361,20 @@ header {
   text-align: left;
   overflow-y: scroll;
   padding: 5px;
+}
+.opt-button{
+  background: none;
+}
+.optional,.optional svg{
+  color: #898989 !important;
+  stroke: #898989 !important;
+}
+.bonus,.bonus svg{
+  color: gold !important;
+  stroke: gold !important;
+}
+.opt-button svg{
+vertical-align: middle;
+stroke: #fff;
 }
 </style>
