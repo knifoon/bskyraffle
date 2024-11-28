@@ -17,18 +17,18 @@ let copied = ref(false)
 if (params.get('opt')){
   //4 digits
   console.log('raffle options');  
-  raffleOptions.value.like = true
-  raffleOptions.value.comment = params.get('opt')[1] == 1
-  raffleOptions.value.repost = params.get('opt')[2] == 1
-  raffleOptions.value.follow = params.get('opt')[3] == 1
+  raffleOptions.value.like = 1
+  raffleOptions.value.comment = Number(params.get('opt')[1])
+  raffleOptions.value.repost = Number(params.get('opt')[2])
+  raffleOptions.value.follow = Number(params.get('opt')[3])
   console.log(raffleOptions.value);
   
   
 } else {
-  raffleOptions.value.like = true
-  raffleOptions.value.comment = true
-  raffleOptions.value.repost = true
-  raffleOptions.value.follow = true
+  raffleOptions.value.like = 1
+  raffleOptions.value.comment = 1
+  raffleOptions.value.repost = 1
+  raffleOptions.value.follow = 1
 }
 
 const copy = (t) => {
@@ -98,9 +98,9 @@ const getInfo = async() => {
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
   //make opturl
   let newOpt = '1'
-  raffleOptions.value.comment ? newOpt += '1' : newOpt += '0'
-  raffleOptions.value.repost ? newOpt += '1' : newOpt += '0'
-  raffleOptions.value.follow ? newOpt += '1' : newOpt += '0'
+  newOpt += raffleOptions.value.comment 
+  newOpt += raffleOptions.value.repost 
+  newOpt += raffleOptions.value.follow 
   console.log('opturl =', optURL)
   console.log('newurl =', newOpt)
   optURL.value = newOpt
@@ -112,7 +112,7 @@ const getInfo = async() => {
   const observer = new ResizeObserver(entries => {
     for (let entry of entries) {
       const { height } = entry.contentRect;
-      console.log('Height changed:', height); 
+      // console.log('Height changed:', height); 
       document.querySelector('.partic_container ul').style.cssText  = `max-height: ${height * 0.92}px`;
     }
   });
@@ -137,7 +137,8 @@ const getPlayers = async() => {
     did: like.actor.did,
     displayName: like.actor.displayName,
     url: `https://bsky.app/profile/${like.actor.handle}`,
-    avatar: like.actor.avatar
+    avatar: like.actor.avatar,
+    bonus: 0
     }
   })
   let repostUserList = await info.value.reposts.map(repost => {
@@ -157,21 +158,61 @@ const getPlayers = async() => {
       })
       return follow
   }
-  if(raffleOptions.value.comment){
-    participants.value = commentUserList.filter(user => likeUserList.some(e => e.handle == user.handle))
-  } else {
-    participants.value = likeUserList
-  }
-  if(raffleOptions.value.repost) participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
-  if(raffleOptions.value.follow) participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
+
+  participants.value = likeUserList
   //exclude post author
   participants.value = participants.value.filter(user => user.did != info.value.did)
+
+  if(raffleOptions.value.comment == 1){
+    participants.value = participants.value.filter(user => commentUserList.some(e => e.handle == user.handle))
+    participants.value = participants.value.map(user => {
+      let temp = user
+      temp.url = commentUserList.find(e => e.handle == user.handle).url
+      return temp
+    })
+  } else if(raffleOptions.value.comment == 2){
+    participants.value = participants.value.map(user => {
+      let temp = user
+      temp.url = commentUserList.find(e => e.handle == user.handle) ? commentUserList.find(e => e.handle == user.handle).url : user.url
+      temp.bonus = commentUserList.find(e => e.handle == user.handle) ? user.bonus + 1 : user.bonus
+      return temp
+    })
+  }
+  if(raffleOptions.value.repost == 1){
+    participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
+  } else if(raffleOptions.value.repost == 2){
+    participants.value = participants.value.map(user => {
+      let temp = user
+      temp.url = repostUserList.find(e => e.handle == user.handle) ? repostUserList.find(e => e.handle == user.handle).url : user.url
+      temp.bonus = repostUserList.find(e => e.handle == user.handle) ? user.bonus + 1 : user.bonus
+      return temp
+    })
+  }
+  if(raffleOptions.value.follow == 1) participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
+  else if(raffleOptions.value.follow == 2){
+    participants.value = participants.value.map(user => {
+      let temp = user
+      temp.bonus = checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`) ? user.bonus + 1 : user.bonus
+      return temp
+    })
+  }
 }
 
 const getRandom = (arr) => {
   winner.value = arr[Math.floor(Math.random() * arr.length)]
 }
 
+const toggleOpt = (opt) => {
+raffleOptions.value[opt]++
+raffleOptions.value[opt] = raffleOptions.value[opt] > 2 ? 0 : raffleOptions.value[opt]
+getInfo();
+}
+
+const optName = (n) => {
+  return n==1 ? 'REQ'
+  : n==2 ? 'BONUS'
+  : ''
+}
 if(postURL !== '') getInfo();
 </script>
 
@@ -187,10 +228,9 @@ if(postURL !== '') getInfo();
     <div>
       <input v-model="postURL" placeholder="post url" @keyup.enter="getInfo" class="post-url">
       <br>
-      Req. = 
-      Repost:<input v-model="raffleOptions.repost" type="checkbox" @click="getInfo">
-      Comment:<input v-model="raffleOptions.comment" type="checkbox" @click="getInfo">
-      Follow:<input v-model="raffleOptions.follow" type="checkbox" @click="getInfo">
+      <button @click="toggleOpt('repost')">Repost {{ optName(raffleOptions.repost) }}</button>
+      <button @click="toggleOpt('comment')">Comment {{ optName(raffleOptions.comment) }}</button>
+      <button @click="toggleOpt('follow')">Follow {{ optName(raffleOptions.follow) }}</button>
 
     </div>
     <div v-if="display">
@@ -216,7 +256,7 @@ if(postURL !== '') getInfo();
       <h2>{{ participants.length }} Participants</h2> 
       <ul>
         <li v-for="participant in participants" class="participant">
-          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a>
+          <img :src="`${participant.avatar || avatarFallback}`" class="avatar"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }} bonus: {{ participant.bonus }}</a>
         </li>
       </ul>
     </div>
