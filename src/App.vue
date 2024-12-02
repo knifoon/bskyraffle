@@ -1,7 +1,6 @@
 <script setup>
 import {ref} from 'vue'
 import { MessageSquare,Ticket,TicketPlus,UserCheck,Repeat } from 'lucide-vue-next'
-import VueLazyLoad from 'vue-lazyload'
 
 let params = new URLSearchParams(window.location.search)
 const domain = window.location.hostname;
@@ -49,6 +48,7 @@ const fetchAll = async (url,tar,cursor=null,arr=[]) => {
         .then(data => {
           
           arr.push(...data[tar])
+          info.value.fetchCount += data[tar].length
           if(data.cursor){
             cursor = data.cursor || null
             return fetchAll(url,tar,cursor,arr)
@@ -94,10 +94,19 @@ const getInfo = async() => {
       )))
     })
     
+  //get followers
+  info.value.fetchCount = 0
+  warning.value = 'Getting Followers (this can take a while...)'
+  info.value.followers = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers?actor=${info.value.did}&limit=100`,'followers')
   //get likes
+  info.value.fetchCount = 0
+  warning.value = 'Getting Likes'
   info.value.likes = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=${at_uri}&limit=100`,'likes')
   //get reposts
+  info.value.fetchCount = 0
+  warning.value = 'Getting Reposts'
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
+  warning.value = ''
   //make opturl
   let newOpt = '1'
   newOpt += raffleOptions.value.comment 
@@ -149,6 +158,12 @@ const getPlayers = async() => {
     did: repost.did,
     }
   })
+  let followerUserList = await info.value.followers.map(follower => {
+    return {
+    handle: follower.handle,
+    did: follower.did,
+    }
+  })
 
   //need to generate link from comment
   const checkFollow = async (url) => {
@@ -185,16 +200,16 @@ const getPlayers = async() => {
   } else if(raffleOptions.value.repost == 2){
     participants.value = participants.value.map(user => {
       let temp = user
-      temp.url = repostUserList.find(e => e.handle == user.handle) ? repostUserList.find(e => e.handle == user.handle).url : user.url
       temp.bonus = repostUserList.find(e => e.handle == user.handle) ? user.bonus + 1 : user.bonus
       return temp
     })
   }
-  if(raffleOptions.value.follow == 1) participants.value = participants.value.filter(async user => await checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`))
-  else if(raffleOptions.value.follow == 2){
+  if(raffleOptions.value.follow == 1){
+    participants.value = participants.value.filter(user => followerUserList.some(e => e.handle == user.handle))
+  } else if(raffleOptions.value.follow == 2){
     participants.value = participants.value.map(user => {
       let temp = user
-      temp.bonus = checkFollow(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}&others=${user.did}`) ? user.bonus + 1 : user.bonus
+      temp.bonus = followerUserList.find(e => e.handle == user.handle) ? user.bonus + 1 : user.bonus
       return temp
     })
   }
@@ -218,7 +233,7 @@ const getRandom = () => {
 const toggleOpt = (opt) => {
 raffleOptions.value[opt]++
 raffleOptions.value[opt] = raffleOptions.value[opt] > 2 ? 0 : raffleOptions.value[opt]
-getInfo();
+getPlayers();
 }
 
 const optName = (n) => {
@@ -246,7 +261,7 @@ if(postURL !== '') getInfo();
       <button @click="toggleOpt('follow')" class="opt-button" :class="{'optional':raffleOptions.follow==0,'req':raffleOptions.follow==1,'bonus':raffleOptions.follow==2}" :title="'Follow: '+optName(raffleOptions.follow)"><UserCheck /></button>
 
     </div>
-    <div v-if="display">
+    <div v-if="display && !warning">
       <button @click="getRandom(participants)">Pick A Winner</button>
     </div>
     <div v-if="winner" class="winner">
@@ -259,16 +274,16 @@ if(postURL !== '') getInfo();
         </h1>
       </a>
     </div>
-    <div v-if="warning "><h4>{{ warning }}</h4></div>
+    <div v-if="warning "><h4>{{ warning }} {{ info.fetchCount || '' }}</h4></div>
   </header>
   <div class="container">
-    <div v-if="display && !warning" class="col embed">
+    <div v-if="display " class="col embed">
       <div v-html="info.embed"></div>
     </div>
-    <div v-if="participants.length > 1" class="col partic_container">
+    <div v-if="participants.length > 0" class="col partic_container">
       <h2 style="position: relative;">{{ participants.length }} Participants <span style="font-size: 20px;position: absolute; right: 10px; top: -15px;"><Ticket style="vertical-align: text-bottom; height: 22px;"><title>Total Tickets</title></Ticket> {{ assignTickets().length }}</span></h2>
       <ul>
-        <li v-for="participant in participants" class="participant" v-lazy-container="{ selector: 'img', loading: '@/assets/avatar.svg' }">
+        <li v-for="participant in participants" class="participant" v-lazy-container="{ selector: 'img' }">
           <img :src="`${participant.avatar || avatarFallback}`" class="avatar" loading="lazy"><a :href="`${participant.url}`" target="_blank">{{ participant.displayName || participant.handle }}</a> <TicketPlus v-for="n in participant.bonus" style="vertical-align: text-top;"><title>Bonus Ticket</title></TicketPlus>
         </li>
       </ul>
