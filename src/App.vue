@@ -94,14 +94,15 @@ const getInfo = async() => {
       )))
     })
     
-  //get followers
-  info.value.fetchCount = 0
-  warning.value = 'Getting Followers (this can take a while...)'
-  info.value.followers = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers?actor=${info.value.did}&limit=100`,'followers')
   //get likes
   info.value.fetchCount = 0
   warning.value = 'Getting Likes'
   info.value.likes = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=${at_uri}&limit=100`,'likes')
+  //get followers
+  info.value.fetchCount = 0
+  warning.value = 'Getting Followers (this can take a while...)'
+  // info.value.followers = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers?actor=${info.value.did}&limit=100`,'followers')
+  checkFollow(info.value.likes)
   //get reposts
   info.value.fetchCount = 0
   warning.value = 'Getting Reposts'
@@ -130,6 +131,24 @@ const getInfo = async() => {
   observer.observe(document.querySelector('.embed'));
 
 }
+  //need to generate link from comment
+  const checkFollow = async (arr) => {
+    const chunkSize = 30;
+    for (let i = 0; i < arr.length; i += chunkSize) {
+        const chunk = arr.slice(i, i + chunkSize);
+        let users = chunk.map(user => user.actor.did)
+        let arrurl = ""
+        users.forEach(u => arrurl += `&others[]=${u}`)
+        // let follow = false;
+        fetch(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}${arrurl}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        
+      })
+      return follow
+    }
+  }
 
 const getPlayers = async() => {
   // filter users
@@ -165,16 +184,6 @@ const getPlayers = async() => {
     }
   })
 
-  //need to generate link from comment
-  const checkFollow = async (url) => {
-    let follow = false;
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if(data.relationships[0].followedBy) follow = true
-      })
-      return follow
-  }
 
   participants.value = likeUserList
   //exclude post author
@@ -221,7 +230,6 @@ const assignTickets = () => {
       tickets.push(user.did)
     }
   })
-  console.log(tickets)
   return tickets
 }
 const getRandom = () => {
