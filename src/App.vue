@@ -101,8 +101,10 @@ const getInfo = async() => {
   //get followers
   info.value.fetchCount = 0
   warning.value = 'Getting Followers (this can take a while...)'
+  info.value.followers = []
   // info.value.followers = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers?actor=${info.value.did}&limit=100`,'followers')
   checkFollow(info.value.likes)
+  console.log(info.value.followers)
   //get reposts
   info.value.fetchCount = 0
   warning.value = 'Getting Reposts'
@@ -143,10 +145,8 @@ const getInfo = async() => {
         fetch(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}${arrurl}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data);
-        
+        data.relationships.forEach(user =>{if(user.followedBy) info.value.followers.push({'did':user.did})})
       })
-      return follow
     }
   }
 
@@ -177,12 +177,7 @@ const getPlayers = async() => {
     did: repost.did,
     }
   })
-  let followerUserList = await info.value.followers.map(follower => {
-    return {
-    handle: follower.handle,
-    did: follower.did,
-    }
-  })
+  let followerUserList = await info.value.followers
 
 
   participants.value = likeUserList
@@ -214,11 +209,11 @@ const getPlayers = async() => {
     })
   }
   if(raffleOptions.value.follow == 1){
-    participants.value = participants.value.filter(user => followerUserList.some(e => e.handle == user.handle))
+    participants.value = participants.value.filter(user => followerUserList.some(e => e.did == user.did))
   } else if(raffleOptions.value.follow == 2){
     participants.value = participants.value.map(user => {
       let temp = user
-      temp.bonus = followerUserList.find(e => e.handle == user.handle) ? user.bonus + 1 : user.bonus
+      temp.bonus = followerUserList.find(e => e.did == user.did) ? user.bonus + 1 : user.bonus
       return temp
     })
   }
