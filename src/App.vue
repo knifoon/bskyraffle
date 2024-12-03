@@ -57,6 +57,7 @@ const fetchAll = async (url,tar,cursor=null,arr=[]) => {
         })
       }
 const getInfo = async() => {
+  warning.value = ''
   if(!postURL.startsWith('https://bsky.app')) {
     warning.value = 'Not a Bluesky URL'
     return;
