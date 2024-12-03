@@ -57,6 +57,10 @@ const fetchAll = async (url,tar,cursor=null,arr=[]) => {
         })
       }
 const getInfo = async() => {
+  if(!postURL.startsWith('https://bsky.app')) {
+    warning.value = 'Not a Bluesky URL'
+    return;
+  }
   //reset
   info.value = {};
   display.value = false
@@ -67,10 +71,6 @@ const getInfo = async() => {
   .then(res => res.json())
   .then(data => data.html)
   
-  if(!postURL.startsWith('https://bsky.app')) {
-    warning.value = 'Not a Bluesky URL'
-    return;
-  }
   let post = [...postURL.matchAll(/profile\/(.*)\/post\/(.*)/g)];
   [info.value.full,info.value.handle,info.value.post] = post[0];
   //get did
@@ -102,7 +102,6 @@ const getInfo = async() => {
   info.value.fetchCount = 0
   warning.value = 'Getting Followers (this can take a while...)'
   info.value.followers = []
-  // info.value.followers = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers?actor=${info.value.did}&limit=100`,'followers')
   checkFollow(info.value.likes)
   console.log(info.value.followers)
   //get reposts
@@ -110,6 +109,7 @@ const getInfo = async() => {
   warning.value = 'Getting Reposts'
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
   warning.value = ''
+  info.value.fetchCount = 0
   //make opturl
   let newOpt = '1'
   newOpt += raffleOptions.value.comment 
