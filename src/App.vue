@@ -111,14 +111,6 @@ const getInfo = async() => {
   info.value.reposts = await fetchAll(`https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${at_uri}&limit=100`,'repostedBy')
   warning.value = ''
   info.value.fetchCount = 0
-  //make opturl
-  let newOpt = '1'
-  newOpt += raffleOptions.value.comment 
-  newOpt += raffleOptions.value.repost 
-  newOpt += raffleOptions.value.follow 
-  console.log('opturl =', optURL)
-  console.log('newurl =', newOpt)
-  optURL.value = newOpt
   
   let bskyEmbed = document.createElement('script')
       bskyEmbed.setAttribute('src', 'https://embed.bsky.app/static/embed.js')
@@ -218,6 +210,14 @@ const getPlayers = async() => {
       return temp
     })
   }
+    //make opturl
+    let newOpt = '1'
+  newOpt += raffleOptions.value.comment 
+  newOpt += raffleOptions.value.repost 
+  newOpt += raffleOptions.value.follow 
+  console.log('opturl =', optURL)
+  console.log('newurl =', newOpt)
+  optURL.value = newOpt
 }
 const assignTickets = () => {
   let tickets = [];
