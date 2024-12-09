@@ -68,7 +68,7 @@ const getInfo = async() => {
   winner.value = null
   participants.value = [];
 
-  info.value.embed = await fetch(`https://corsproxy.io/?https://embed.bsky.app/oembed?url=${postURL}`)
+  info.value.embed = await fetch(`https://corsproxy.io/?url=https://embed.bsky.app/oembed?url=${postURL}`)
   .then(res => res.json())
   .then(data => data.html)
   
@@ -129,18 +129,19 @@ const getInfo = async() => {
   //need to generate link from comment
   const checkFollow = async (arr) => {
     const chunkSize = 30;
+    let tempArr = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
         const chunk = arr.slice(i, i + chunkSize);
         let users = chunk.map(user => user.actor.did)
         let arrurl = ""
         users.forEach(u => arrurl += `&others[]=${u}`)
-        // let follow = false;
         fetch(`https://public.api.bsky.app/xrpc/app.bsky.graph.getRelationships?actor=${info.value.did}${arrurl}`)
       .then(res => res.json())
       .then(data => {
-        data.relationships.forEach(user =>{if(user.followedBy) info.value.followers.push({'did':user.did})})
+        data.relationships.forEach(user =>{if(user.followedBy) tempArr.push({'did':user.did})})
       })
     }
+    info.value.followers = tempArr
   }
 
 const getPlayers = async() => {
@@ -176,7 +177,8 @@ const getPlayers = async() => {
   participants.value = likeUserList
   //exclude post author
   participants.value = participants.value.filter(user => user.did != info.value.did)
-
+  console.log('likes',participants.value);
+  
   if(raffleOptions.value.comment == 1){
     participants.value = participants.value.filter(user => commentUserList.some(e => e.handle == user.handle))
     participants.value = participants.value.map(user => {
@@ -192,6 +194,7 @@ const getPlayers = async() => {
       return temp
     })
   }
+  console.log('comments',participants.value);
   if(raffleOptions.value.repost == 1){
     participants.value = participants.value.filter(user => repostUserList.some(e => e.handle == user.handle))
   } else if(raffleOptions.value.repost == 2){
@@ -201,6 +204,7 @@ const getPlayers = async() => {
       return temp
     })
   }
+  console.log('reposts',participants.value);
   if(raffleOptions.value.follow == 1){
     participants.value = participants.value.filter(user => followerUserList.some(e => e.did == user.did))
   } else if(raffleOptions.value.follow == 2){
@@ -210,6 +214,7 @@ const getPlayers = async() => {
       return temp
     })
   }
+  console.log('follow',participants.value);
     //make opturl
     let newOpt = '1'
   newOpt += raffleOptions.value.comment 
